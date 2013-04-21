@@ -19,63 +19,57 @@ int checksize(int *arraysize);
 int sort(int qel, int *qas, int *qco, int *array);
 int sort1(int qel, int *qas, int *qco, int *array);
 int sortn(int qel, int *qas, int *qco, int *array);
-int QuickSort(int first, int last, int *array);
+int QuickSort(int first, int last, int *array,int qty, int *qas, int *qco);
 int swap(int *x, int *y);
 
 int main(void)//главная функция
 {
-	int *array, arraysize,n,nmax,position,number,low,up,asgn=0,cmpr=0,asgn1=0,cmpr1=0,asgnn=0,cmprn=0;//определение переменных
-	double etime,etime1,etimen;
+	int *array, arraysize,low,up,asgn=0,cmpr=0,asgn1=0,cmpr1=0,asgnn=0,cmprn=0,asgnq=0,cmprq=0;//определение переменных
+	double etime,etime1,etimen,etimeq;
 	time_t start,finish;
 	printf("Enter quantity of elements in array: ");//ввод количества элементов в массиве
 	scanf("%d", &arraysize);
-	checksize(&arraysize);
+	checksize(&arraysize);//проверка количества элементов в массиве
 	array = malloc((arraysize+1)*sizeof(int));//создание массива
 	printf("Enter limits: ");//ввод пределов
 	scanf("%d %d", &low,&up);
-	if (low>up)
+	if (low>up)//обмен пределов
 	{
 		up=low-up;
 		low=low-up;
 		up=low+up;
 	}
-	filling(low,up,arraysize,array);//заполнеие массива
+	filling(low,up,arraysize,array);//заполнение массива
 	savetofile(arraysize,array);//сохранение массива в файл
 	readfromfile(&arraysize,array);//считывание массива из файла
-	printf("Array\n",asgn);
-	//output(arraysize,array);//вывод массива
+	printf("Array\n");
+	output(arraysize,array);//вывод массива
 	readfromfile(&arraysize,array);//считывание массива из файла
-	start=clock();
-	//sort(arraysize, &asgn, &cmpr,array);//сортировка массива
-	QuickSort(1,arraysize,array);
-	finish=clock();
-	etime=(finish-start)/CLOCKS_PER_SEC;
-	printf("Standart sorting\n",asgn);
-	//output(arraysize,array);//вывод массива
-	printf("Quantity of assignments: %d\n",asgn);
-	printf("Quantity of comparisons: %d\n\n",cmpr);
+	start=clock();//начало сортировки
+	sort(arraysize, &asgn, &cmpr,array);//сортировка массива
+	finish=clock();//завершение сортировки
+	etime=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
 	readfromfile(&arraysize,array);//считывание массива из файла
-	start=clock();
+	start=clock();//начало сортировки
 	sort1(arraysize, &asgn1, &cmpr1,array);//сортировка массива
-	finish=clock();
-	etime1=(finish-start)/CLOCKS_PER_SEC;
-	printf("Improved sort\n",asgn);
-   //	output(arraysize,array);//вывод массива
-	printf("Quantity of assignments: %d\n",asgn1);
-	printf("Quantity of comparisons: %d\n\n",cmpr1);
+	finish=clock();//завершение сортировки
+	etime1=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
 	readfromfile(&arraysize,array);//считывание массива из файла
-	start=clock();
+	start=clock();//начало сортировки
 	sortn(arraysize, &asgnn, &cmprn,array);//сортировка массива
-	finish=clock();
-	etimen=(finish-start)/CLOCKS_PER_SEC;
-	printf("Improved+\n",asgn);
-	//output(arraysize,array);//вывод массива
-	printf("Quantity of assignments: %d\n",asgnn);
-	printf("Quantity of comparisons: %d\n\n",cmprn);
-	printf("Method       |  Standart  |  Improved  |  Improved+ |\n");
-	printf("Assignments  | %10d | %10d | %10d |\n",asgn,asgn1,asgnn);
-	printf("Comparisons  | %10d | %10d | %10d |\n",cmpr,cmpr1,cmprn);
-	printf("Elapsed time | %10.3lf | %10.3lf | %10.3lf |\n",etime,etime1,etimen);
+	finish=clock();//завершение сортировки
+	etimen=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
+	readfromfile(&arraysize,array);//считывание массива из файла
+	start=clock();//начало сортировки
+	QuickSort(1, arraysize, array, arraysize, &asgnq, &cmprq);//сортировка массива
+	finish=clock();//завершение сортировки
+	etimeq=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
+	printf("Sorted array\n");//вывод отсортированного массива
+	output(arraysize,array);
+	printf("Method       |  Standart  |  Improved  |  Improved+ | Quick sort |\n");//вывод таблицы сравнения
+	printf("Assignments  | %10d | %10d | %10d | %10d |\n",asgn,asgn1,asgnn,asgnq);//сравнение присваиваний
+	printf("Comparisons  | %10d | %10d | %10d | %10d |\n",cmpr,cmpr1,cmprn,cmprq);//сравнение сравнений
+	printf("Elapsed time | %10.3lf | %10.3lf | %10.3lf | %10.3lf |\n",etime,etime1,etimen,etimeq);//сравнение затраченного времени
 	fflush(stdin);//ожидание действий пользователя
 	getchar();
 	return 0;
@@ -394,28 +388,44 @@ int sortn(int qel, int *qas, int *qco, int *array)//сортировка массива
 	}
 }
 
-int QuickSort(int first, int last, int *array)
+int QuickSort(int first, int last, int *array,int qty, int *qas, int *qco)
 {
-int pivot; /*опорное значение*/
-int l,r; /*левый и правый счетчики*/
-l=first; r=last;
-pivot=array[(l+r)/2]; /*определение опорного значения*/
-while (l<=r) {
-while (array[l]<pivot) l++;
-while (array[r]>pivot) r--;
-if (l<=r) {
-swap(&array[l],&array[r]); /*перестановка двух элементов*/
-l++;
-r--;
+	int pivot; //объявление переменных
+	int l,r;
+	l=first;//передача внешних переменных во внутренние счётчики
+	r=last;
+	pivot=array[(l+r)/2]; //определение опорного значения
+	while (l<=r)//поиск пересечения счётчиков
+	{
+		while (array[l]<pivot)//пока элемент меньше опорного
+		{
+			l++;//увеличение левого
+			*qco=*qco+1;//изменение количества сравнений
+		}
+		while (array[r]>pivot)//пока элемент больше опорного
+		{
+			r--;//уменьшение правого
+			*qco=*qco+1;//изменение количества сравнений
+		}
+		if (l<=r)//если найдено
+		{
+			swap(&array[l],&array[r]); //перестановка двух элементов
+			*qas=*qas+3;
+			l++;//увеличение левого
+			r--;//уменьшение правого
+		}
+	}
+	if (first<r)//сортировка левой части
+		QuickSort(first,r,array,qty,qas,qco);
+	if (l<last)//сортировка правой части
+		QuickSort(l,last,array,qty,qas,qco);
 }
-} /*Рекурсивная сортировка:*/
-if (first<r) QuickSort(first,r,array); /*- левого участка, */
-if (l<last) QuickSort(l,last,array); /*- правого участка.*/
-}
-int swap(int *x, int *y)
+
+int swap(int *x, int *y)//перестановка переменных
 {
-int temp; /* temp - вспомогательная переменная */
-temp=*x;
-*x=*y;
-*y=temp;
+	int temp; //объявление переменных
+	temp=*x;  //обмен переменных через дополнительную переменную
+	*x=*y;
+	*y=temp;
 }
+
