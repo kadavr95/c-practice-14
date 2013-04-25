@@ -1,4 +1,4 @@
-//Самостоятельная работа 13. Вариант 1. Яскович Дмитрий (T02-01c). Dimini Inc. (c)2013
+//Самостоятельная работа 14. Вариант 1. Яскович Дмитрий (T02-01c). Dimini Inc. (c)2013
 #include <stdio.h>//подключение библиотек
 #include <stdlib.h>
 #include <math.h>
@@ -24,7 +24,7 @@ int swap(int *x, int *y);
 
 int main(void)//главная функция
 {
-	int *array, arraysize,low,up,asgn=0,cmpr=0,asgn1=0,cmpr1=0,asgnn=0,cmprn=0,asgnq=0,cmprq=0;//определение переменных
+	int i,*array, arraysize,low,up,asgn=0,cmpr=0,asgn1=0,cmpr1=0,asgnn=0,cmprn=0,asgnq=0,cmprq=0,cmpl,cmplq;//определение переменных
 	double etime,etime1,etimen,etimeq;
 	time_t start,finish;
 	printf("Enter quantity of elements in array: ");//ввод количества элементов в массиве
@@ -66,10 +66,62 @@ int main(void)//главная функция
 	etimeq=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
 	printf("Sorted array\n");//вывод отсортированного массива
 	output(arraysize,array);
+	cmpl=arraysize*arraysize;
+	cmplq=arraysize*log10(arraysize)/log10(2);
 	printf("Method       |  Standart  |  Improved  |  Improved+ | Quick sort |\n");//вывод таблицы сравнения
 	printf("Assignments  | %10d | %10d | %10d | %10d |\n",asgn,asgn1,asgnn,asgnq);//сравнение присваиваний
 	printf("Comparisons  | %10d | %10d | %10d | %10d |\n",cmpr,cmpr1,cmprn,cmprq);//сравнение сравнений
 	printf("Elapsed time | %10.3lf | %10.3lf | %10.3lf | %10.3lf |\n",etime,etime1,etimen,etimeq);//сравнение затраченного времени
+	printf("Complexity   | %10d |            |            | %10d |\n\n",cmpl,cmplq);//сравнение затраченного времени
+	arraysize=10;
+	for (i = 0; i < 4;i++)//4 варианта для сравнений
+	{
+		filling(low,up,arraysize,array);//заполнение массива
+		savetofile(arraysize,array);//сохранение массива в файл
+		readfromfile(&arraysize,array);//считывание массива из файла
+		readfromfile(&arraysize,array);//считывание массива из файла
+		start=clock();//начало сортировки
+		sort(arraysize, &asgn, &cmpr,array);//сортировка массива
+		finish=clock();//завершение сортировки
+		etime=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
+		readfromfile(&arraysize,array);//считывание массива из файла
+		start=clock();//начало сортировки
+		sort1(arraysize, &asgn1, &cmpr1,array);//сортировка массива
+		finish=clock();//завершение сортировки
+		etime1=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
+		readfromfile(&arraysize,array);//считывание массива из файла
+		start=clock();//начало сортировки
+		sortn(arraysize, &asgnn, &cmprn,array);//сортировка массива
+		finish=clock();//завершение сортировки
+		etimen=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
+		readfromfile(&arraysize,array);//считывание массива из файла
+		start=clock();//начало сортировки
+		QuickSort(1, arraysize, array, arraysize, &asgnq, &cmprq);//сортировка массива
+		finish=clock();//завершение сортировки
+		etimeq=(finish-start)/CLOCKS_PER_SEC;//вычисление времени сортировки
+		cmpl=arraysize*arraysize;
+		cmplq=arraysize*log10(arraysize)/log10(2);
+		printf("N: %d\n",arraysize);//вывод таблицы сравнения для п
+		printf("Method       |  Standart  |  Improved  |  Improved+ | Quick sort |\n");//вывод таблицы сравнения
+		printf("Assignments  | %10d | %10d | %10d | %10d |\n",asgn,asgn1,asgnn,asgnq);//сравнение присваиваний
+		printf("Comparisons  | %10d | %10d | %10d | %10d |\n",cmpr,cmpr1,cmprn,cmprq);//сравнение сравнений
+		printf("Elapsed time | %10.3lf | %10.3lf | %10.3lf | %10.3lf |\n",etime,etime1,etimen,etimeq);//сравнение затраченного времени
+		printf("Complexity   | %10d |            |            | %10d |\n",cmpl,cmplq);//сравнение затраченного времени
+		if (arraysize==10)//новый размер массива
+		{
+			arraysize=5*arraysize;
+		}
+		else
+		if (arraysize==50)
+		{
+			arraysize=2*arraysize;
+		}
+		else
+		if (arraysize==100)
+		{
+			arraysize=5*arraysize;
+		}
+	}
 	fflush(stdin);//ожидание действий пользователя
 	getchar();
 	return 0;
@@ -399,20 +451,20 @@ int QuickSort(int first, int last, int *array,int qty, int *qas, int *qco)
 	{
 		while (array[l]<pivot)//пока элемент меньше опорного
 		{
-			l++;//увеличение левого
+			l++;//увеличение левого счетчика
 			*qco=*qco+1;//изменение количества сравнений
 		}
 		while (array[r]>pivot)//пока элемент больше опорного
 		{
-			r--;//уменьшение правого
+			r--;//уменьшение правого счетчика
 			*qco=*qco+1;//изменение количества сравнений
 		}
-		if (l<=r)//если найдено
+		if (l<=r)//если левый счётчик меньше правого
 		{
 			swap(&array[l],&array[r]); //перестановка двух элементов
 			*qas=*qas+3;
-			l++;//увеличение левого
-			r--;//уменьшение правого
+			l++;//увеличение левого счетчика
+			r--;//уменьшение правого счетчика
 		}
 	}
 	if (first<r)//сортировка левой части
@@ -428,4 +480,3 @@ int swap(int *x, int *y)//перестановка переменных
 	*x=*y;
 	*y=temp;
 }
-
